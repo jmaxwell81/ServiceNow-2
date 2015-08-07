@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+<!-- set up some values to be referenced by the client script -->
+<g:evaluate var="jvar_use_dbimage">
+   var imageGR = new GlideRecord('db_image');
+   imageGR.isValid();
+</g:evaluate>
+<g:evaluate var="jvar_write_dbimage">
+   imageGR.canWrite();
+</g:evaluate>
+<g:evaluate var="jvar_use_url">
+   gs.getProperty("glide.ui.html.image.allow_url","true");
+</g:evaluate>
+<input type="hidden" id="ni.has_db_image" name="ni.has_db_image" value="${jvar_use_dbimage}"/>
+<j:set var="jvar_show_link" value="true" />
+<j:if test="${gs.getProperty('glide.ui.disable_attachment_view') == 'true'}">
+   <j:set var="jvar_show_link" value="false" />
+</j:if>
+<input type="hidden" id="ni.show_attachment_view" name="ni.show_attachment_view" value="${jvar_show_link}"/>
+<j:set var="jvar_show_link_popup" value="true" />
+<j:if test="${gs.getProperty('glide.ui.attachment_popup')=='false'}">
+   <j:set var="jvar_show_link_popup" value="false" />
+</j:if>
+<input type="hidden" id="ni.show_attachment_popup" name="ni.show_attachment_popup" value="${jvar_show_link_popup}" />
+
+<table>
+<tbody>
+  <tr>
+    <td style="white-space:nowrap"><label for="link_type">${gs.getMessage('Type')}:</label></td>
+    <td>
+       <select name="link_type" id="link_type" onchange="changedLinkType();">
+            <j:set var="jvar_default_insert_image_type" value="attachment" />
+                       <j:if test="${jvar_use_dbimage}">
+               <j:set var="jvar_default_insert_image_type" value="dbimage" />
+                           <g:ui_select_option text="${gs.getMessage('Image Library')}" value="dbimage" selected="${jvar_default_insert_image_type}" />
+                        </j:if>
+                        <g:ui_select_option text="${gs.getMessage('Attachment')}" value="attachment" selected="${jvar_default_insert_image_type}" />
+                        <j:if test="${jvar_use_url}">
+                          <g:ui_select_option text="${gs.getMessage('URL')}" value="url" selected="${jvar_default_insert_image_type}" />
+                        </j:if>
+        </select>
+    </td>
+  </tr>
+  <tr>
+    <td style="white-space:nowrap;vertical-align:top;padding-top:4px;"><label for="f_url">${gs.getMessage('Image')}:</label></td>
+    <td width="100%">
+<!-- URL -->
+        <div id="type_url" style="white-space:nowrap">
+            <input type="text" name="url" id="f_url" size="60" onchange="onPreview()"
+               title="${gs.getMessage('Enter the image URL here')}" />
+        </div>
+
+<!-- DB_IMAGE -->
+                <j:if test="${jvar_use_dbimage}">
+           <g:evaluate var="jvar_dbimages_exist">
+              var dbi = new GlideRecord("db_image");
+              dbi.query();
+                      if (dbi.hasNext())
+                 "inline";
+              else
+                 "none";
+           </g:evaluate>
+           <div id="type_dbimage" style="white-space:nowrap; display:none">
+                        <div id="dbimage_picker">
+                           <j:set var="jvar_onchange" value="onPreview()" />
+                           <g:ui_reference id="dbimage_list" name="dbimage_list" 
+                              completer="AJAXTableCompleter"
+                              columns="category"
+                              order_by="name;category"
+                              show_popup="false"
+                              table="db_image"
+                              value="" 
+                              displayValue="" />
+                        </div>
+                        <j:if test="${jvar_write_dbimage}">
+                              <span style="padding-left:4px;"/>
+                              <button type="button" id="new_db_image_button" onclick="showNewDbImage()" title="${gs.getMessage('Upload a new image to the database')}">
+                                  ${gs.getMessage('New')}
+                              </button>
+                        </j:if>
+                        <div id="new_dbimage" style="white-space:nowrap; display:none">
+                           <form id="new_dbimage_form" action="sys_user_image.do" enctype="multipart/form-data"
+                              method="post" onsubmit="return submitDbImage()" target="upload_target">
+                              <input type="hidden" name="sysparm_table" value="db_image"/>
+                              <input type="hidden" name="sysparm_fieldname" value="image"/>
+                              <input type="hidden" name="sysparm_sys_id" value="new_db_image"/>
+                              <input type="hidden" name="sysparm_nostack" value="yes"/>
+                              <input type="hidden" name="sysparm_redirect" value="html_insert_image_uploaded.do?sysparm_nostack=yes"/>
+                              <fieldset style="float: left">
+                                 <legend>${gs.getMessage('New Library Image')}</legend>
+                                 <table><tbody><tr><td> <!-- table keeps Safari from messing up the fieldset -->
+                                    <div style="white-space:nowrap; float: left; padding: 2px 5px;">
+                                        <label for="db_image_name">${gs.getMessage('Filename')}:</label>
+                                    </div>
+                                    <input type="text" name="db_image_name" id="db_image_name" size="50" maxlength="${jvar_db_image_name_len}" 
+                                           onkeypress="checkDbImageSubmitOK('name')" 
+                                           title="${gs.getMessage('Name must have a recognized image file extension (.gif .png .jpg .jpeg .bmp)')}"/>
+                                    <p/>
+                                    <input type="file" name="attachFile" id="attachFile" size="41" onchange="checkDbImageSubmitOK('file')" 
+                                           title="${gs.getMessage('File must be a recognized image type (.gif .png .jpg .jpeg .bmp)')}"/>
+                                    <p/>
+                                    <button type="submit" id="new_dbimage_ok" disabled="true" class="disabled">${gs.getMessage('Upload')}</button>
+                                    <button type="button" id="new_dbimage_cancel" 
+                                       onclick="cancelDbImage()" style="display:none;">${gs.getMessage('Cancel')}</button>
+                                    <img id="dbimage_please_wait" src="images/please_wait.gifx" style="display: none;" alt="${gs.getMessage('Please Wait')}"/>
+                                 </td></tr></tbody></table>
+                              </fieldset>
+                           </form>
+                        </div>
+           </div>
+                </j:if>
+
+<!-- SYS_ATTACHMENT -->
+        <div id="type_attachment" style="white-space:nowrap; display:none">
+              <select name="attachment_list" id="attachment_list" onchange="onPreview()" title="${gs.getMessage('Attachment')}">$[SP]
+                 <g2:evaluate>
+                    var sa = new GlideSysAttachment();
+                    var attachmentGR = sa.getAttachments("$[RP.getWindowProperties().get('target_table')]", 
+                       "$[RP.getWindowProperties().get('target_sys_id')]");
+                    var imageTypes = { "jpeg": true, "jpg": true, "gif": true, "bmp": true, "png": true };
+                 </g2:evaluate>
+                 <j2:while test="$[attachmentGR.next()]">
+                       <g2:evaluate var="jvar_is_image">
+                          var isImage = false;
+                          var fileName = attachmentGR.getValue("file_name");
+                          if (!gs.nil(fileName)) {
+                             if (fileName.lastIndexOf(".") > 0) {
+                                var lowerFileName = fileName.toLowerCase();
+                                for(var key in imageTypes) {
+                                   if (lowerFileName.endsWith("." + key))
+                                      isImage = true;
+                                }
+                             }
+                          }
+                       </g2:evaluate>
+                       <j2:if test="$[jvar_is_image]">
+                          <j2:set var="jvar_file_name" value="$[HTML:attachmentGR.getValue('file_name')]"/>
+                          <g2:ui_select_option text="$[jvar_file_name]" value="$[attachmentGR.getValue('sys_id')]" />
+                       </j2:if>
+                 </j2:while> 
+              </select>
+              <span style="padding-left:4px;"/>
+                  <button type="button" id="new_attachment_image_button" onclick="showNewAttachmentImage()" title="${gs.getMessage('Upload a new image as an attachment')}">
+                      ${gs.getMessage('New')}
+                  </button>
+              <form id="new_attachmentimage" action="sys_user_image.do" enctype="multipart/form-data" style="display:none"
+                 method="post" onsubmit="return submitAttachmentImage()" target="upload_target">
+                 <input type="hidden" name="sysparm_table" value="${RP.getWindowProperties().get('target_table')}"/>
+                 <input type="hidden" name="sysparm_fieldname" value="image"/>
+                 <input type="hidden" name="sysparm_noprefix" value="true"/>
+                 <input type="hidden" name="sysparm_sys_id" value="${RP.getWindowProperties().get('target_sys_id')}"/>
+                 <input type="hidden" name="sysparm_nostack" value="yes"/>
+                 <input type="hidden" name="sysparm_redirect" value="html_insert_image_uploaded.do?sysparm_nostack=yes"/>
+                 <fieldset style="float: left">
+                    <legend><label for="attachmentFile">${gs.getMessage('New Attachment Image')}</label></legend>
+                    <table><tbody><tr><td> <!-- table keeps Safari from messing up the fieldset -->
+                       <input type="file" name="attachmentFile" id="attachmentFile" size="41" onchange="checkAttachmentSubmitOK()" 
+                              title="${gs.getMessage('File must be a recognized image type (.gif .png .jpg .jpeg .bmp)')}"/>
+                       <p/>
+                       <button type="submit" id="new_attachmentimage_ok" disabled="true" class="disabled">${gs.getMessage('Attach')}</button>
+                       <button type="button" id="new_attachmentimage_cancel" 
+                          onclick="cancelAttachmentImage()" style="display:none">${gs.getMessage('Cancel')}</button>
+                       <img id="attachment_please_wait" src="images/please_wait.gifx" style="display: none;" alt="${gs.getMessage('Please Wait')}" />
+                    </td></tr></tbody></table>
+                 </fieldset>
+              </form>
+        </div>
+<!-- END SYS_ATTACHMENT -->
+
+    </td>
+  </tr>
+  <tr id="tooltip_tr">
+    <td style="white-space:nowrap"><label for="f_title">${gs.getMessage('Tooltip')}:</label></td>
+    <td><input type="text" name="title" id="f_title" size="60" /></td>
+  </tr>
+  <tr id="alt_tr">
+    <td style="white-space:nowrap"><label for="f_alt">${gs.getMessage('Alt')}:</label></td>
+    <td><input type="text" name="alt" id="f_alt" size="60" /></td>
+  </tr>
+</tbody>
+</table>
+
+
+
+
+<br clear="all" />
+<g:ui_table>
+ <tr>
+  <td align="center">
+    <div name="ipreview" id="ipreview" style="height:200px;width:300px" height="200" width="300"><img id='preview_img' src='images/16square.gif' alt="" /></div>
+  </td>
+ </tr>
+</g:ui_table>
+
+<g:evaluate var="jvar_advanced_display">
+  var p = gs.getPreference("image_select.advanced.options");
+  if (p == "true")
+    "block";
+  else
+    "none";
+</g:evaluate>
+
+<div style="padding:4px;"><span title="${gs.getMessage('Expand/collapse additional image options')}" style="cursor:pointer;color:blue;font-size:80%;" onclick="toggleAdvanced()">Advanced options</span></div>
+<div id="advanced_options" style="display:${jvar_advanced_display};">
+<table width="100%">
+<tbody>
+<tr>
+<td>
+<fieldset style="float: left; margin-left: 5px;">
+<legend>${gs.getMessage('Layout')}</legend>
+
+<div style="padding: 2px"></div>
+
+<table><tbody>
+<tr>
+<g:evaluate var="jvar_alignment_msg" expression="gs.getMessage('Positioning of this image')"/>
+<td style="white-space:nowrap;" title="${jvar_alignment_msg}"><label for="f_align">${gs.getMessage('Alignment')}:</label></td>
+<td>
+<select size="1" name="align" id="f_align"
+  title="${jvar_alignment_msg}">
+  <option value=""                             >${gs.getMessage('Not set')}</option>
+  <option value="left"                         >${gs.getMessage('Left')}</option>
+  <option value="right"                        >${gs.getMessage('Right')}</option>
+  <option value="texttop"                      >${gs.getMessage('Texttop')}</option>
+  <option value="absmiddle"                    >${gs.getMessage('Absmiddle')}</option>
+  <option value="baseline" selected="1"        >${gs.getMessage('Baseline')}</option>
+  <option value="absbottom"                    >${gs.getMessage('Absbottom')}</option>
+  <option value="bottom"                       >${gs.getMessage('Bottom')}</option>
+  <option value="middle"                       >${gs.getMessage('Middle')}</option>
+  <option value="top"                          >${gs.getMessage('Top')}</option>
+</select>
+</td>
+</tr>
+<tr>
+<g:evaluate var="jvar_border_thickness_msg" expression="gs.getMessage('Leave empty for no border')"/>
+<td style="white-space:nowrap;" title="${jvar_border_thickness_msg}"><label for="f_border">${gs.getMessage('Border thickness')}:</label></td>
+<td>
+<input type="text" name="border" id="f_border" size="5"
+title="${jvar_border_thickness_msg}" />
+</td>
+</tr>
+</tbody></table>
+<div style="padding: 2px"></div>
+
+</fieldset>
+</td>
+<td>
+<fieldset style="float:right; margin-right: 5px;">
+<legend>${gs.getMessage('Spacing')}</legend>
+
+<div style="padding: 2px"></div>
+<g:evaluate var="jvar_horiz_pad_msg" expression="gs.getMessage('Horizontal (hspace) image padding')"/>
+<g:evaluate var="jvar_vert_pad_msg" expression="gs.getMessage('Vertical (vspace) image padding')"/>
+<table><tbody>
+<tr>
+<td style="white-space:nowrap;" title="${jvar_horiz_pad_msg}"><label for="f_horiz">${gs.getMessage('Horizontal')}:</label></td>
+<td>
+<input type="text" name="horiz" id="f_horiz" size="5"
+title="${jvar_horiz_pad_msg}" />
+</td>
+</tr>
+<tr>
+<td style="white-space:nowrap;" title="${jvar_vert_pad_msg}"><label for="f_vert">${gs.getMessage('Vertical')}:</label></td>
+<td>
+<input type="text" name="vert" id="f_vert" size="5"
+title="${jvar_vert_pad_msg}" />
+</td>
+</tr>
+</tbody></table>
+<div style="padding: 2px"></div>
+
+</fieldset>
+
+</td>
+
+<td>
+<fieldset style="float:right; margin-right: 5px;">
+<legend>${gs.getMessage('Size')}</legend>
+
+<div style="padding: 2px"></div>
+<g:evaluate var="jvar_width_msg" expression="gs.getMessage('Image Width')"/>
+<g:evaluate var="jvar_height_msg" expression="gs.getMessage('Image Height')"/>
+<table><tbody>
+<tr>
+<td style="white-space:nowrap;" title="${jvar_width_msg}"><label for="f_width">${gs.getMessage('Width')}</label></td>
+<td>
+<!--EDIT KA set input readonly -->
+<input type="text" name="width" id="f_width" size="5"
+title="${jvar_width_msg}" readonly="true" />
+</td>
+</tr>
+<tr>
+<td style="white-space:nowrap;" title="${jvar_height_msg}"><label for="f_height">${gs.getMessage('Height')}</label></td>
+<td>
+  <!--EDIT KA set input readonly -->
+<input type="text" name="vert" id="f_height" size="5"
+title="${jvar_height_msg}" readonly="true"/>
+</td>
+</tr>
+</tbody></table>
+<div style="padding: 2px"></div>
+
+</fieldset>
+
+</td>
+
+
+</tr>
+</tbody>
+</table>
+</div>
+
+<div style="border-top: 1px solid #dfdfdf; padding:6px;align:right;">
+   <span style="float:right;padding-bottom:4px;">
+      <g:dialog_button_ok ok="return onOK()" ok_id="ok_button" />
+   </span>
+</div>
+
+<iframe id="upload_target" name="upload_target" src="blank.do" style="width:0;height:0;border:0px solid #fff;" alt="">$[SP]</iframe>
+</j:jelly>
