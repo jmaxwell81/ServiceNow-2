@@ -159,8 +159,7 @@ var endNum = gdtEnd.getNumericValue();
 },
 
 //Created by KA
-
-//Check if dates are in the future	
+//Validate user date selected is in the future
 compareFutureDates: function(){
 //Client date
 var userDate = this.getParameter('sysparm_userDate');
@@ -168,9 +167,7 @@ var userDate = this.getParameter('sysparm_userDate');
 var now = new GlideDateTime();
 	now.setDisplayValue(gs.now());
 //Timezone
-var timeZoneOffSet = now.getTZOffset(); 
-// now.setNumericValue(now.getNumericValue() + timeZoneOffSet);  
-	gs.log("GDT OFFSET:" + now);
+var timeZoneOffSet = now.getTZOffset();
 //Get number of milliseconds now date
 	var nowNum = now.getNumericValue();
 	
@@ -189,59 +186,29 @@ var userDateNum = gdt.getNumericValue();
 	}
 },
 
+//Created by KA
+//Validate date format
 validateCalendarDate: function(){
 //Client date
 var userDate = this.getParameter('sysparm_userDate');
-//Check date format is in mm-dd-yyyy
-if (!/^\d{4}[\/\-](0?[1-9]|1[012])[\/\-](0?[1-9]|[12][0-9]|3[01])$/.test(userDate)) {
-	return("ERROR: Format must be YYYY-MM-DD. Please use the calendar picker.");
-	}
-	else {
-		return true;
-	}
+//Check date format will match one of the available system dates
+	var ymdDash = /^\d{4}[\-](0?[1-9]|1[012])[\-](0?[1-9]|[12][0-9]|3[01])$/; //yyyy-mm-dd
+	var mdyDash = /^(0[1-9]|1[0-2])[\-](0[1-9]|1\d|2\d|3[01])[\-](19|20)\d{2}$/; //mm-dd-yyyy
+	var dmySlash = /^(0[1-9]|1\d|2\d|3[01])\/(0[1-9]|1[0-2])\/(19|20)\d{2}$/; //dd/mm/yyyy
+	var dmyDash = /^(0[1-9]|1\d|2\d|3[01])[\-](0[1-9]|1[0-2])[\-](19|20)\d{2}$/; //dd-mm-yyyy
+
+//A bug with the builtin GlideDateTime object is preventing the use of the date in this format
+//	var dmyDot = /^(0[1-9]|1\d|2\d|3[01])[\.](0[1-9]|1[0-2])[\.](19|20)\d{2}$/; //dd.mm.yyyy
 	
-	// Take the string and split it by the dash delimiter		
-	var format = userDate.split("-");
-	// Parse the string and convert each part to integer
-	var day = parseInt(format[2], 10);
-	var month = parseInt(format[1], 10);
-	var year = parseInt(format[0], 10);
-	// Store the number of days in each month in an array				
-	var monthDays = [ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 ];
-	
-if(month == 0 || month > 12) {
-	return("ERROR: Enter a valid calendar month");
-	}	
-	else {
-		return true;
-	}
-	
-// Check the number of years
-if(year < 2015 || year > 2080) {
-	return("ERROR: Enter a valid calendar year");
-	}
-	else {
-		return true;
-	}
-	
-// Check if the year is a leap year and modify February in monthDays array
-if(year % 400 == 0 || (year % 100 != 0 && year % 4 == 0)) {
-	monthDays[1] = 29;
-	}
-	else {
-		return true;
-	}
-	
-// Check the number of days in each month 
-if(day < 0 || day > monthDays[month - 1]) {
-	return("ERROR: Enter a valid calendar day");
+if (!ymdDash.test(userDate) && !mdyDash.test(userDate) && !dmySlash.test(userDate) && !dmyDash.test(userDate)) {
+	return("ERROR: Format must be yyyy-mm-dd, mm-dd-yyyy, dd/mm/yyyy or dd-mm-yyyy.");
 	}
 	else {
 		return true;
 	}
 },
 	
-	
+//Created by KA
 //Compare start end between less than 21 days
 getDateDiff: function(){
 //Client start date
@@ -271,5 +238,4 @@ if(dateDiffDays > 21) {
 		return true;
 	}
 }
-	
 });

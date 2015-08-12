@@ -20,6 +20,12 @@ if (!isLoading) {
 			g_form.submitted = false;  
        	 return false;  
 			}
+
+	var checkEndDaywk = checkDayOfWeek(end);
+		if (checkEndDaywk != 'true') {
+			g_form.showFieldMsg('end_date', checkEndDaywk,'error');
+       	 return false;
+			}
 	
 	var checkEndFuture = checkDateFuture(end);
 		if (checkEndFuture != 'true') {
@@ -47,7 +53,7 @@ if (!isLoading) {
 	}	
 	}
 
-	//Check calendar date format valid YYYY-MM-DD	
+	//Check calendar date format	
     function checkDateFormat(dateVal) {  
         var ajaxCalendarDate = new GlideAjax('ClientDateTimeUtils');  
         ajaxCalendarDate.addParam('sysparm_name', 'validateCalendarDate');  
@@ -56,42 +62,41 @@ if (!isLoading) {
 		return ajaxCalendarDate.getAnswer();  
 		}
 	
+	//Check day of week	
+    function checkDayOfWeek(dateVal) {  
+        var ajaxDayOfWeek = new GlideAjax('ClientDateTimeUtils');  
+        ajaxDayOfWeek.addParam('sysparm_name', 'validateDayOfWeek');  
+        ajaxDayOfWeek.addParam('sysparm_userDate', dateVal);  
+        ajaxDayOfWeek.getXMLWait();
+		return ajaxDayOfWeek.getAnswer();
+		}
+	
 	function checkDateFuture(dateVal) {
 	//Check selected dates are in the future
-		var ajaxFuture = new GlideAjax('ClientDateTimeUtils'); 
+		var ajaxFuture = new GlideAjax('ClientDateTimeUtils');
 		ajaxFuture.addParam('sysparm_name', 'compareFutureDates');
-		ajaxFuture.addParam('sysparm_userDate', dateVal); 
-		ajaxFuture.getXMLWait();
-		return ajaxFuture.getAnswer(); 
-	}
-	
-	
-	function checkDateFuture(dateVal) {
-	//Check selected dates are in the future
-		var ajaxFuture = new GlideAjax('ClientDateTimeUtils'); 
-		ajaxFuture.addParam('sysparm_name', 'compareFutureDates');
-		ajaxFuture.addParam('sysparm_userDate', dateVal); 
+		ajaxFuture.addParam('sysparm_userDate', dateVal);
 		ajaxFuture.getXMLWait();
 		return ajaxFuture.getAnswer(); 
 	}
 	
 	//Check start date is before end date
 	function checkDateCompare(startval, endval) {
-		var ajaxCompare = new GlideAjax('ClientDateTimeUtils'); 
+		var ajaxCompare = new GlideAjax('ClientDateTimeUtils');
 		ajaxCompare.addParam('sysparm_name', 'compareStartEndDates');
-		ajaxCompare.addParam('sysparm_start', startval); 
+		ajaxCompare.addParam('sysparm_start', startval);
 		ajaxCompare.addParam('sysparm_end', endval);
 		ajaxCompare.getXMLWait();
-		return ajaxCompare.getAnswer(); 
+		return ajaxCompare.getAnswer();
 	}
 
 	//Check loaner date period is not more than 21 days
 	function checkDateDiff(startval, endval) {
-		var ajaxCompare = new GlideAjax('ClientDateTimeUtils'); 
+		var ajaxCompare = new GlideAjax('ClientDateTimeUtils');
 		ajaxCompare.addParam('sysparm_name', 'getDateDiff');
-		ajaxCompare.addParam('sysparm_start', startval); 
+		ajaxCompare.addParam('sysparm_start', startval);
 		ajaxCompare.addParam('sysparm_end', endval);
 		ajaxCompare.getXMLWait();
-		return ajaxCompare.getAnswer(); 
+		return ajaxCompare.getAnswer();
 }
 }

@@ -29,6 +29,18 @@ function checkLoanerReq() {
 			g_form.showFieldMsg('end_date', checkEndFormat,'error');
        	 return false;  
 			}
+
+	var checkStartDaywk = checkDayOfWeek(start);
+		if (checkStartDaywk != 'true') {
+			g_form.showFieldMsg('start_date', checkStartDaywk,'error');
+       	 return false;  
+			}
+
+	var checkEndDaywk = checkDayOfWeek(end);
+		if (checkEndDaywk != 'true') {
+			g_form.showFieldMsg('end_date', checkEndDaywk,'error');
+       	 return false;
+			}
 	
 	var checkStartFuture = checkDateFuture(start);
 		if (checkStartFuture != 'true') {
@@ -59,7 +71,7 @@ function checkLoanerReq() {
 			}
 	}
 }
-	//Check calendar date format valid YYYY-MM-DD	
+	//Check calendar date format valid	
     function checkDateFormat(dateVal) {  
         var ajaxCalendarDate = new GlideAjax('ClientDateTimeUtils');  
         ajaxCalendarDate.addParam('sysparm_name', 'validateCalendarDate');  
@@ -67,14 +79,14 @@ function checkLoanerReq() {
         ajaxCalendarDate.getXMLWait();
 		return ajaxCalendarDate.getAnswer();  
 		}
-	function checkDateFuture(dateVal) {
-	//Check selected dates are in the future
-		var ajaxFuture = new GlideAjax('ClientDateTimeUtils'); 
-		ajaxFuture.addParam('sysparm_name', 'compareFutureDates');
-		ajaxFuture.addParam('sysparm_userDate', dateVal); 
-		ajaxFuture.getXMLWait();
-		return ajaxFuture.getAnswer(); 
-	}
+	//Check date is a weekday
+    function checkDayOfWeek(dateVal) {  
+        var ajaxDayOfWeek = new GlideAjax('ClientDateTimeUtils');  
+        ajaxDayOfWeek.addParam('sysparm_name', 'validateDayOfWeek');  
+        ajaxDayOfWeek.addParam('sysparm_userDate', dateVal);  
+        ajaxDayOfWeek.getXMLWait();
+		return ajaxDayOfWeek.getAnswer();  
+		}
 	function checkDateFuture(dateVal) {
 	//Check selected dates are in the future
 		var ajaxFuture = new GlideAjax('ClientDateTimeUtils'); 

@@ -20,6 +20,12 @@ if (!isLoading) {
        	 return false;  
 			}
 
+	var checkStartDaywk = checkDayOfWeek(start);
+		if (checkStartDaywk != 'true') {
+			g_form.showFieldMsg('start_date', checkStartDaywk,'error');
+       	 return false;  
+			}
+
 	var checkStartFuture = checkDateFuture(start);
 		if (checkStartFuture != 'true') {
 			g_form.showFieldMsg('start_date', checkStartFuture,'error');
@@ -43,7 +49,7 @@ if (!isLoading) {
 			}
 	}
 
-	//Check calendar date format valid YYYY-MM-DD	
+	//Check calendar date format valid	
     function checkDateFormat(dateVal) {  
         var ajaxCalendarDate = new GlideAjax('ClientDateTimeUtils');  
         ajaxCalendarDate.addParam('sysparm_name', 'validateCalendarDate');  
@@ -51,15 +57,15 @@ if (!isLoading) {
         ajaxCalendarDate.getXMLWait();
 		return ajaxCalendarDate.getAnswer();  
 		}
-	
-	function checkDateFuture(dateVal) {
-	//Check selected dates are in the future
-		var ajaxFuture = new GlideAjax('ClientDateTimeUtils'); 
-		ajaxFuture.addParam('sysparm_name', 'compareFutureDates');
-		ajaxFuture.addParam('sysparm_userDate', dateVal); 
-		ajaxFuture.getXMLWait();
-		return ajaxFuture.getAnswer(); 
-	}
+
+	//Check day of week	
+    function checkDayOfWeek(dateVal) {  
+        var ajaxDayOfWeek = new GlideAjax('ClientDateTimeUtils');  
+        ajaxDayOfWeek.addParam('sysparm_name', 'validateDayOfWeek');  
+        ajaxDayOfWeek.addParam('sysparm_userDate', dateVal);  
+        ajaxDayOfWeek.getXMLWait();
+		return ajaxDayOfWeek.getAnswer();  
+		}
 	
 	function checkDateFuture(dateVal) {
 	//Check selected dates are in the future
@@ -82,12 +88,12 @@ if (!isLoading) {
 
 	//Check loaner date period is not more than 21 days
 	function checkDateDiff(startval, endval) {
-		var ajaxCompare = new GlideAjax('ClientDateTimeUtils'); 
+		var ajaxCompare = new GlideAjax('ClientDateTimeUtils');
 		ajaxCompare.addParam('sysparm_name', 'getDateDiff');
-		ajaxCompare.addParam('sysparm_start', startval); 
+		ajaxCompare.addParam('sysparm_start', startval);
 		ajaxCompare.addParam('sysparm_end', endval);
 		ajaxCompare.getXMLWait();
-		return ajaxCompare.getAnswer(); 
+		return ajaxCompare.getAnswer();
 }
 }
 }
