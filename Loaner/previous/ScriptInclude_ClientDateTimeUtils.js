@@ -1,3 +1,4 @@
+//Script Include ClientDateTimeUtils
 var ClientDateTimeUtils = Class.create();  
 ClientDateTimeUtils.prototype = Object.extendsObject(AbstractAjaxProcessor, {  
   
@@ -159,10 +160,37 @@ var endNum = gdtEnd.getNumericValue();
 },
 
 //Created by KA
-//Validate user date selected is in the future
+validateDayOfWeek: function(){
+//Client date
+var userDate = this.getParameter('sysparm_userDate');
+//Create a GlideDateTime object
+var gdt = new GlideDateTime();
+//Set gtd object to date time selected by user
+	gdt.setDisplayValue(userDate);
+//Get day check if selected date is a weekday
+	var userDayOfWeek = gdt.getDayOfWeek().toString();
+	if (userDayOfWeek >= 6) {
+	return("ERROR: Selected dates must be on a weekday.");
+
+	}
+	else if (userDayOfWeek < 6) {
+		return true;
+	}
+},
+	
+	
+//Validate user date selected is a weekday in the future
 compareFutureDates: function(){
 //Client date
 var userDate = this.getParameter('sysparm_userDate');
+//Create a GlideDateTime object
+var userGDT = new GlideDateTime();
+//Set gtd object to date time selected by user
+	userGDT.setDisplayValue(userDate);
+	
+//Get number of milliseconds user date
+var userDateNum = userGDT.getNumericValue();
+
 //Now Date
 var now = new GlideDateTime();
 	now.setDisplayValue(gs.now());
@@ -170,13 +198,7 @@ var now = new GlideDateTime();
 var timeZoneOffSet = now.getTZOffset();
 //Get number of milliseconds now date
 	var nowNum = now.getNumericValue();
-	
-//Create a GlideDateTime object
-var gdt = new GlideDateTime();
-//Set gtd object to date time selected by client
-	gdt.setDisplayValue(userDate);
-//Get number of milliseconds user date
-var userDateNum = gdt.getNumericValue();
+
 //Now milliseconds are more than user milliseconds must be in future
 	if(nowNum > userDateNum) {
 	return("ERROR: Selected dates must be in the future.");	
