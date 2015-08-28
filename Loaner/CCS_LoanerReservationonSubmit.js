@@ -71,6 +71,9 @@ function checkLoanerReservation() {
 		function isFutureDate(dateVal) {
 		var userDateValue = getDateFromFormat(dateVal, g_user_date_format);
 		var nowDate = new Date();
+		//Set now to yesterdays date since may have reservations on same day
+		nowDate.setDate(nowDate.getDate() + -1);
+			alert("User date: " + userDateValue + "nowDate: " + nowDate);
 			if (userDateValue < nowDate) {
 				return false;
 		}
