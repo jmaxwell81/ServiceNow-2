@@ -1,9 +1,8 @@
-//Script Include LoanerResUtils
-//client callable All application scopes
-//Class script include
 var LoanerResUtils = Class.create();
 
 LoanerResUtils.prototype = {
+  initialize: function() {  
+    },
   getOverdueReservations : function() {
 
     var a = new Array();
@@ -17,27 +16,6 @@ LoanerResUtils.prototype = {
       a.push(gr.sys_id.toString());
     }
     return a;
-  },
-
-  /*********
-   *
-   * withdrawRequest - Update a request and all related bits
-   *                   (child tasks are handled by a standard bus. rule)
-   *
-   * @param lr - GlideRecord of the request
-   * @return None
-   *
-   **********/
-  withdrawRequest : function(lr) {
-
-    var wf = new Workflow();
-
-    wf.cancel(lr);
-    lr.active=false;
-    lr.state=7;
-    lr.update();
-
-    gs.addInfoMessage(gs.getMessage('loaner_withdraw'));
   },
    
   /*********
@@ -56,24 +34,11 @@ LoanerResUtils.prototype = {
 
     var ci_id = ci;
     var count = 0;
-//    var lr    = new GlideAggregate('loaner_request');
-	var lr = new GlideAggregate('x_broi2_loaner_res_loaner_reservation');
+  var lr = new GlideAggregate('x_broi2_loaner_res_loaner_reservation');
 
-  //  if (JSUtil.nil(ci))
-  //    return false; // Null CI defaults to "not available"
-
-	  if (ci instanceof GlideRecord)
-      ci_id = ci.sys_id;
-	  
-/*    var myQuery = 'active=true^';
-    myQuery += 'cmdb_ci.sys_id=' + ci + '^';
-    myQuery += 'x_broi2_loaner_res_start_date<' + end + '^';
-    myQuery += 'x_broi2_loaner_res_end_date>' + start + '^';
-    myQuery += 'NQ';
-    myQuery += 'active=true^';
-    myQuery += 'cmdb_ci.sys_id=' + ci + '^';
-    myQuery += 'x_broi2_loaner_res_end_date<' + gs.daysAgo(0);*/
-
+  if (ci instanceof GlideRecord)
+    ci_id = ci.sys_id;
+  //Build encoded query that checks if the ci is available between selected start and end dates
     var myQuery = 'active=true^';
     myQuery += 'cmdb_ci.sys_id=' + ci + '^';
     myQuery += 'x_broi2_loaner_res_start_date<=' + end + '^';
@@ -82,28 +47,21 @@ LoanerResUtils.prototype = {
     myQuery += 'active=true^';
     myQuery += 'cmdb_ci.sys_id=' + ci + '^';
     myQuery += 'x_broi2_loaner_res_end_date<=' + gs.daysAgo(0);
-	  
 
-	  
-	 
-	  gs.info("myQuery: " + myQuery);
     lr.addEncodedQuery(myQuery);
     lr.addAggregate('COUNT');
     lr.query();
     if (lr.next()) {
        count = lr.getAggregate('COUNT');
-		gs.info("Count lr " + count + " sys_id " + ci_id);
-		if (count == 0) {
-			var answer = 'true';	
-		}
-		else if (count > 0) {
-			var answer = 'false';
-		}
+    //If query returns zero items then it is available between selected start and end dates
+    if (count == 0) {
+      var answer = true;  
     }
-
- //   return (count == 0);
-		return answer;	
-	  
+    else if (count > 0) {
+      var answer = false;
+    }
+    }
+    return answer;
   },
 
   /**********
@@ -117,44 +75,34 @@ LoanerResUtils.prototype = {
    * @return - comma separated list of sys_ids that are available at that time
    *
    **********/
-  availableCis : function(class_name, pickup_location, start, end) {
-
+  availableCis : function(class_name, pickup_location, manufacturer, start, end) {
+  //Make a new query on the cmdb_ci table
     var ci                    = new GlideRecord('cmdb_ci');
- //   var installStatusProperty = gs.getProperty('glide.loaner.install_status');
- //   var checkAvailProperty    = gs.getProperty('glide.loaner.check_availability') == 'true';
+  //Create an empty array
     var availableItems        = [];
-	//  gs.info("Glide record: " + ci);
-	//  	  gs.info("Loaner ci class: " + class_name);
-	  
-    //if (!JSUtil.nil(installStatusProperty)) {
-    //   ci.addQuery('install_status', 'IN', installStatusProperty);
-    // }
-//	  ci.addQuery('sys_id','03eee2b7c1f7210077ae9f5f3e49e9bb');
+  //Build a query which maps to input parameters
     ci.addQuery('loaner', true);
     ci.addQuery('sys_class_name', class_name);
     ci.addQuery('depot', pickup_location);
-//	  gs.info("Ci query: " + ci.sys_id);
-    ci.query();
-
-    while (ci.next()) {
-      var id = ci.sys_id.toString();
-		gs.info("Ci sys_id: " + id);
-
-  //    if (checkAvailProperty) {          // Check only available matching items
-		var lnrUtil = new LoanerResUtils;
-
-		gs.info("Count available: " + id + lnrUtil.isAvailable(id, start, end));
-		
-		if (lnrUtil.isAvailable(id, start, end) == 'true'){
- //       if (this.isAvailable(id, start, end)) {
-          availableItems.push(id);
-		}
-
-  //    } else {                          // Take any matching items
-  //     availableItems.push(id);
-  //   }
+  ci.addQuery('install_status','1');
+  //If Item Type is laptop must filter by manufacturer
+    if (class_name == 'cmdb_ci_computer') {  
+  ci.addQuery('manufacturer.name', manufacturer); 
     }
-	  gs.info("Avail Items: " + availableItems.join(','));
+    ci.query();
+  //While loop on each ci the query returns
+    while (ci.next()) {
+  //Grab the sys_id of the returned ci and convert to string
+    var id = ci.sys_id.toString();
+    
+    var lnrUtil = new LoanerResUtils;
+    //Run each CI id through the isAvailable function that checks if ci is available between start and end dates
+    if (lnrUtil.isAvailable(id, start, end)){
+      //If the ci is available between start and end dates add to the array
+          availableItems.push(id);
+    }
+    }
+  //Populate the reference qualifier items return sys_ids in a comma separated list
     return availableItems.join(',');
   },
 

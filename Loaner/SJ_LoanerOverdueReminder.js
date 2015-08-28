@@ -20,10 +20,10 @@ var count = lnr.getRowCount();
 	var userEndDate = lnr.x_broi2_loaner_res_end_date;
 	var endDate = new GlideDate(); 
 	endDate.setValue(userEndDate);
-	
+
+	//Get date value in milliseconds to compare
 	var nowDateNum = nowDate.getNumericValue();
 	var endDateNum = endDate.getNumericValue();
-	gs.info("end date num" + endDateNum + " now date " + nowDateNum);
 	
 	var msDiff = nowDateNum - endDateNum;
 	//Milliseconds divided by 86400 to get number of days as a decimal number
@@ -33,10 +33,15 @@ var count = lnr.getRowCount();
 	//Convert to an integer since this is a decimal number
 	var daysDiffInt = parseInt(daysDiffStr);
 	
-	gs.info("msDiff " + msDiff + "daysDiff " + daysDiffInt);
-		
 	if (daysDiffInt >= 1) {
+	//Trigger event to send overdue reminder to the user
 	gs.eventQueue('x_broi2_loaner_res.overduereminder', lnr, lnr.x_broi2_loaner_res_reserved_for.sys_id, daysDiffInt);
+	//If reservation not set as overdue already then set to overdue
+		var overdueStatus = lnr.x_broi2_loaner_res_overdue;
+		if (!overdueStatus) {
+			lnr.x_broi2_loaner_res_overdue = true;
+			lnr.update();
+		}
 	}
 	}
 }
