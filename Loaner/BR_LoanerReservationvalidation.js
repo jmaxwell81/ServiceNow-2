@@ -64,7 +64,8 @@ function checkLoanerReservation() {
 		if (checkEndDayofWk == false) {
 		gs.addInfoMessage('Selected dates must be on a weekday.');
 		stopSubmit();
-		}	*/
+		}
+		*/
 	} 
 }
 
@@ -115,10 +116,11 @@ function checkLoanerReservation() {
 		}
 	
 		function getDayofWk(dateVal) {
-		var userDate = new Date(dateVal);
+		var userDate = new GlideDate(dateVal);
 		// Correct time zone by default GMT -4
 		userDate.setHours(userDate.getHours() + 4);
 		var day = userDate.getDay(); 
+			gs.info("day of week: " + day);
 			if (day == 6 || day == 0) {
 				return false;			
 			}

@@ -14,7 +14,7 @@ prevEndDateP1.addDaysLocalTime(1);
 	var lu = new LoanerResUtils();
 	var luAns = lu.isAvailable(current.cmdb_ci, prevEndDateP1, currentEndDate);
 	if (!luAns){
-	gs.addErrorMessage("Sorry, the item is no longer available for the dates you selected. Please select new dates, or submit a new request for another inventory item.");
+	gs.addErrorMessage("Sorry, the item is not available for the new dates you selected. Please select another end date or submit a new request for another inventory item.");
 	current.setAbortAction(true);
 	}
 }
