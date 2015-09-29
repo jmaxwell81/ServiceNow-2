@@ -1,0 +1,29 @@
+//Email Template
+//approval.groupaccess.reminder
+<div>Hello ${approver.name},</div>
+<div>&nbsp;</div>
+<div>The Approval Request has been&nbsp;awaiting your response since ${sys_created_on}.</div>
+<div>&nbsp;</div>
+<div>
+<div><span>${mail_script:groupaccess_request_summary}</span></div>
+<div><span style="font-size: 10pt;">&nbsp;</span></div>
+<div>&nbsp;</div>
+</div>
+<div><strong>Option 1: Email Approvals</strong></div>
+<div>&nbsp;</div>
+<div>To Approve or Reject via email, respond to this message with either phrase&nbsp;"approve" or "reject" in the subject line or email body.&nbsp;Click&nbsp;here to&nbsp;automatically generate a pre-formatted email response and then send the message.</div>
+<div>&nbsp;</div>
+<div>${mailto:mailto.approval}</div>
+<div>
+<div>&nbsp;</div>
+</div>
+<div>${mailto:mailto.rejection}</div>
+<div>&nbsp;</div>
+<div><strong>Option 2: Login to the Approval Portal</strong></div>
+<div>&nbsp;</div>
+<div>To Approve or Reject via the Approval Portal, click here and login with your Broad credentials. Note that you will need to use the email option if you do not have Broad credentials.</div>
+<div>&nbsp;</div>
+<div>Click here to open the&nbsp;Approval Request: ${URI}</div>
+<div>&nbsp;</div>
+<div>Click here to view the details of the request.</div>
+<div>${sysapproval.sys_class_name}: ${sysapproval.URI}</div>

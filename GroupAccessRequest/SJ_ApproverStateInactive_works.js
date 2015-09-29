@@ -1,15 +1,13 @@
-var nowDay = new Date();
-var todayDay = nowDay.getDay();
-//Run on weekdays only
-if (todayDay != 0 && todayDay != 6) { 
-
 function groupResourceApprovers(){
+//Run on weekdays only  
+  
 //Get all approvers in each group access resource and store in an array
   //Empty array
   var grpResApprovers = [];
   //Query Group Access Resources table
   var grResApp = new GlideRecord('u_group_access_resource');
   grResApp.addQuery('active', 'true');
+//  gr.addQuery('number', 'GRS0001377');
   grResApp.query();
   while(grResApp.next()){
     //Grab the Approver List from the List Collector for each Group Access Resource
@@ -20,6 +18,7 @@ function groupResourceApprovers(){
     grpResApprovers.push(approverList[i] + '');
   }
   }
+//  gs.info(">>>approver state inactive " + grpResApprovers);
   return grpResApprovers;
 }
 
@@ -32,6 +31,7 @@ function deduplicateResApprovers(grpResApprovers) {
 //Run deduplication
     var arrUtil = new ArrayUtil();
     var grpResAppList = arrUtil.unique(grpResApprovers).join();
+// gs.info(">>>approver state inactive dup list " + grpResAppList);
     return grpResAppList;
  }
 
@@ -53,6 +53,7 @@ function groupResourceApproverState(approverList) {
   inaUsr.addQuery('sys_id', grpApprover[i]).addOrCondition('email', grpApprover[i]);
   //Query inactive users to check if user is inactive
   inaUsr.addQuery('active', 'false');
+//  gr.addQuery('number', 'GRS0001377');
   inaUsr.query();
   //Iterate users in Group Resource Approver List where active is false
   while(inaUsr.next()){
@@ -65,12 +66,14 @@ function groupResourceApproverState(approverList) {
 
   }
 }
-  //Send email notification
+  gs.info("inactiveApproverNames " + inactiveApproverNames);
   gs.eventQueue("groupaccess.approversinactive", current, inactiveApproverNames, '1');
   return inactiveApprovers;
 }
 //Grab the list of inactive approvers
 var inactiveApprovers = groupResourceApproverState(grpApproverList);
+
+//gs.info(">>>approver users inactive " + inactiveApprovers);
 
 //Remove approvers from Group Resources Approver List if they are inactive
 function removeApprovers(inactiveApprovers) {
@@ -79,6 +82,7 @@ function removeApprovers(inactiveApprovers) {
   //Query the Group Access Resource table
   var grResApp = new GlideRecord('u_group_access_resource');
   grResApp.addQuery('active', 'true');
+//  grResApp.addQuery('number', 'GRS0001377');
   grResApp.query();
   //Iterate each active Group Access Resource record
   while(grResApp.next()){
@@ -86,6 +90,8 @@ function removeApprovers(inactiveApprovers) {
     updatedApproverList = [];
     //Grab current Approver List from the List Collector for each Group Access Resource
     approverList = grResApp.u_approver_list.toString().split(',');
+
+ //   gs.info("approverList: " + approverList + "inactive Approver List: " + inactiveApproverList);
     //Take difference (subtract) between current approver list and list of inactive approvers
     var arrayUtil = new ArrayUtil();
     //Create the updated approver list with the return value
@@ -94,8 +100,11 @@ function removeApprovers(inactiveApprovers) {
     grResApp.u_approver_list = updatedApproverList;
     grResApp.update();
 }
+    //return updated approverlist
   return updatedApproverList;
 }
 //Create a report log with the list of inactive approvers that were removed from each Group Access Resource
 var updatedApproverList = removeApprovers(inactiveApprovers);
-}
+//gs.info("Updated Approver List " + updatedApproverList);
+
+
