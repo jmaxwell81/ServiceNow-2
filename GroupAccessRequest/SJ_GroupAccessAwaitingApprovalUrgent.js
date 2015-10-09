@@ -1,8 +1,8 @@
-//Group Access Awaiting Approval Urgent
 approvalReminderUrgent();
 function approvalReminderUrgent() {
 var nowDay = new Date();
 var todayDay = nowDay.getDay();
+	
 //Run on weekdays only
 if (todayDay != 0 && todayDay != 6) { 
 	var ar = new GlideRecord('sysapproval_approver');  

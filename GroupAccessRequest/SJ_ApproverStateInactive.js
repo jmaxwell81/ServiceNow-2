@@ -13,7 +13,7 @@ function groupResourceApprovers(){
   grResApp.query();
   while(grResApp.next()){
     //Grab the Approver List from the List Collector for each Group Access Resource
-    //Approval List contains either a sysid or an email address for each user
+    //Approval List contains a sysid for each user
     approverList = grResApp.u_approver_list.toString().split(',');
     //Iterate the comma separate list and push each approver to array
     for(i=0; i < approverList.length; i++) {
@@ -23,9 +23,8 @@ function groupResourceApprovers(){
   return grpResApprovers;
 }
 
-//Grab a list of all Group Resource Approvers containing sysids or email addresses
+//Grab a list of all Group Resource Approvers containing sysids
 var groupResAppListAll = groupResourceApprovers();
-
   
 //Run the list of all Group Resource Approvers to deduplication
 function deduplicateResApprovers(grpResApprovers) {
@@ -47,10 +46,10 @@ function groupResourceApproverState(approverList) {
   var grpApprover = approverList.toString().split(',');
   //Iterate elements in the array
   for(var i=0; i<grpApprover.length; i++){
-  //For each individual element in the array query the user table check if the sys id or email matches
+  //For each individual element in the array query the user table
   var inaUsr = new GlideRecord('sys_user');
-  //Query SysID OR Email Address to check if user is a Group Resource Approver
-  inaUsr.addQuery('sys_id', grpApprover[i]).addOrCondition('email', grpApprover[i]);
+  //Query SysID to check if user is a Group Resource Approver
+  inaUsr.addQuery('sys_id', grpApprover[i]);
   //Query inactive users to check if user is inactive
   inaUsr.addQuery('active', 'false');
   inaUsr.query();
@@ -58,8 +57,6 @@ function groupResourceApproverState(approverList) {
   while(inaUsr.next()){
     //Push each user sysids to an array
     inactiveApprovers.push(inaUsr.sys_id + '');
-    //Push email addresses to the array as well since the approver list sometimes contains email addresses
-    inactiveApprovers.push(inaUsr.email + '');
     inactiveApproverNames.push(inaUsr.name + '');
     gs.info("Group Resource Approver State user query " + inaUsr.sys_id + inaUsr.name);
 
