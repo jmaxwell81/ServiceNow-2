@@ -7,6 +7,7 @@ var todayDay = nowDay.getDay();
 if (todayDay != 0 && todayDay != 6) { 
 	var aac = new GlideRecord('sysapproval_approver');  
 	aac.addQuery('state', 'requested');
+	aac.addQuery('sysapproval.urgency', '1');
 	aac.addQuery('sys_updated_on', '<', gs.daysAgoStart(14));
 	aac.addQuery('sysapproval.sys_class_name','u_group_access_request');
 	aac.query();

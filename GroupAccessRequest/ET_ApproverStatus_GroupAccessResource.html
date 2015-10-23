@@ -1,0 +1,13 @@
+<!--Group Access Resource Approver Status
+Table Group Access Resource u_group_access_resource
+Subject Group Access Resource Approver Status
+Send when Event is fired groupaccess.approversinactive
+who will receive Assignment Group -->
+
+<p>Group Access Resource Approver Status</p>
+<p><strong>Approvers Inactive</strong></p>
+<p>Approvers who&nbsp;are now&nbsp;inactive and have been removed from the Group Access Resource table</p>
+<p>${mail_script:groupaccess_resource_approver_inactive}<br /><br /></p>
+<p>&nbsp;<br /><strong>Group Access Resources without any&nbsp;Approvers</strong></p>
+<p>Group Access Resources that require an approver but do not have an approver assigned currently</p>
+<p><span>${mail_script:groupaccess_resource_approver_empty}</span></p>
