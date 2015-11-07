@@ -11,7 +11,7 @@ if (todayDay != 0 && todayDay != 6) {
 	//Approval For Task type is Group Access Request
 	ar.addQuery('sysapproval.sys_class_name', 'u_group_access_request');	
 	//Urgency is not high
-	ar.addQuery('sysapproval.urgency', '!=', '1');
+	ar.addQuery('sysapproval.urgency', '!=', 1);
 	//Updated between 2 and 3 days ago
 	var bwn2n3days = 'sys_updated_onBETWEENjavascript:gs.daysAgoStart(3)@javascript:gs.daysAgoEnd(2)';
 	//Updated between 5 and 6 days ago
