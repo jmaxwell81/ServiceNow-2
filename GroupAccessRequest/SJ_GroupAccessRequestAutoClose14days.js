@@ -8,7 +8,7 @@ if (todayDay != 0 && todayDay != 6) {
 	var aac = new GlideRecord('sysapproval_approver');  
 	aac.addQuery('state', 'requested');
 	aac.addQuery('sysapproval.sys_class_name','u_group_access_request');
-	aac.addQuery('sys_updated_on', '>', gs.daysAgoStart(14));
+	aac.addQuery('sys_updated_on', '<', gs.daysAgoStart(14));
 	aac.query();
 	while(aac.next()){ 
 	//Get Group Access Request record that is associated with the approval record
