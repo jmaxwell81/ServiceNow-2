@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"></link>
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="/resources/demos/style.css"></link>
+  <script>
+<!--	   $(function() {
+     $( "#datepicker" ).datepicker({ minDate: -20, maxDate: "+1M +10D" });
+  }); -->
+<!--
+//works
+$(function() {
+var array = ["2015-01-03","2015-01-13","2015-01-23"];
+     $( "#datepicker" ).datepicker({
+        dateFormat: "yy-mm-dd",
+        beforeShowDay: function(date) {
+    if($.inArray($.datepicker.formatDate('yy-mm-dd', date ), array) > -1)
+            {
+                return [false, "", "Booked out"];
+            } else {
+                return [true, "", "available"];
+            }
+        }
+    });
+});
+-->
+	 
+
+ var $j_custom = jQuery.noConflict(true)
+$j_custom(function() {
+
+var startDate = "2015-06-15",
+    endDate  = "2015-06-21"
+    dateRange = [];       
+
+for (var d = new Date(startDate); d ${AMP}lt;= new Date(endDate); d.setDate(d.getDate() + 1)) {
+    dateRange.push($j_custom.datepicker.formatDate('yy-mm-dd', d));
+}
+	  
+var array = [startDate,endDate]	  
+     $j_custom( "#datepicker" ).datepicker({
+        dateFormat: "yy-mm-dd",
+        beforeShowDay: function(date) {
+        if($j_custom.inArray($j_custom.datepicker.formatDate('yy-mm-dd', date ), dateRange) > -1)
+            {
+                return [false, "", "Booked out"];
+            }
+	    var weekenddate = $j_custom.datepicker.noWeekends(date);
+ 	   return weekenddate;
+        }
+
+    });
+});
+  </script>
+	  <tr>
+		  <!-- <g:ui_input_field label="date" name="datepicker" id="datepicker" /> -->
+		  Date: <input type="text" id="datepicker" style="z-index: 10000;"></input>
+	  </tr>
+</j:jelly>
