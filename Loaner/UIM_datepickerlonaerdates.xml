@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<j:jelly trim="false" xmlns:j="jelly:core" xmlns:g="glide" xmlns:j2="null" xmlns:g2="null">
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"></link>
+  <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <link rel="stylesheet" href="/resources/demos/style.css"></link>
+	<style>
+		div#ui-datepicker-div{
+		z-index:10000 !important;
+		}
+	</style>
+
+<g:evaluate>
+	var lnrsysid = "${RP.getParameterValue('sys_id')}";
+	var lnr = new GlideRecord('u_loaner_reservation');
+	lnr.addQuery('sys_id',lnrsysid);
+	lnr.query();
+
+	</g:evaluate>
+  <script>
+
+
+	  
+	var $j_custom = jQuery.noConflict(true)
+	$j_custom(function() {
+
+	
+	var startDate = "2015-06-15",
+		endDate  = "2015-06-21"
+		dateRange = [];       
+	
+	for (var d = new Date(startDate); d ${AMP}lt;= new Date(endDate); d.setDate(d.getDate() + 1)) {
+		dateRange.push($j_custom.datepicker.formatDate('yy-mm-dd', d));
+	}
+	  
+var array = [startDate,endDate]	  
+     $j_custom( "#datepicker" ).datepicker({
+        dateFormat: "yy-mm-dd",
+        beforeShowDay: function(date) {
+        if($j_custom.inArray($j_custom.datepicker.formatDate('yy-mm-dd', date ), dateRange) > -1)
+            {
+                return [false, "", "Booked out"];
+            }
+	    var weekenddate = $j_custom.datepicker.noWeekends(date);
+ 	   return weekenddate;
+        }
+
+    });
+});
+  </script>
+	<table>
+<j:if test="${lnr.hasNext() == false}">
+  <tr><td>No records found.</td></tr>
+</j:if>
+ 
+<!-- Add header cells if we have records to display -->
+<j:if test="${lnr.hasNext() == true}">
+  <tr>
+    <th>Number</th>
+    <th>Title</th>
+    <th>Caller</th>
+    <th>State</th>
+    <th>Assigned to</th>
+  </tr>
+</j:if>
+<j:while test="${lnr.next()}">
+  <tr>
+    <td>${lnr.number}</td>
+    <td>${lnr.short_description}</td>
+    <td>${lnr.u_loaner_state.getDisplayValue()}</td>
+    <td>${lnr.u_start_date}</td>
+    <td>${lnr.u_end_date}</td>
+  </tr>
+</j:while>
+	 <tr>
+		  <!-- <g:ui_input_field label="date" name="datepicker" id="datepicker" /> -->
+		 <!-- Date: <input type="text" id="datepicker" style="z-index: 10000;"></input> -->
+	  </tr>
+	</table>
+</j:jelly>
