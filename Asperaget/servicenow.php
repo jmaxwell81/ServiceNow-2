@@ -8,7 +8,7 @@
 */
 
 // TEST MODE SET TO 0 FOR PRODUCTION!!
-$test =0;
+$test = 1;
 
      
     use BITS\ServiceNow\Api;
@@ -74,12 +74,14 @@ function getFile($filename = null) {
 *  Simple function to create incident and return the INC number on success
 */
 function newIncident($create) {
-
+        //EDIT KA SCS Assignment Group, SCS Category and SCS Subcagetory
         $snapi = new Api($GLOBALS['sn_user'], $GLOBALS['sn_pass'], $GLOBALS['sn_url']);
         $inc = $snapi->factory('ITIL\Incident');
-    	$data = array('assignment_group' => 'Data Transfers', 'description' => 'Aspera API Creation Site',
+    	$data = array('assignment_group' => 'SCS', 'description' => 'Aspera API Creation Site',
         	'short_description' => 'ASPGet request',
-        	'caller_id' => "$create", 'category' => 'Support',
+        	'caller_id' => "$create",
+            'category' => 'Support',
+            'u_scs_category' => 'Data Transfer', 'u_scs_subcategory' => 'Run Service',
         	'location' => 'Remote'
         );
 
@@ -176,7 +178,8 @@ function Message($number,$message) {
     $assid = $incident[0]['assignment_group'];
     $callid = $incident[0]['caller_id'];
     $location = $incident[0]['location'];
-    $params = array('sys_id' => "$sysid", 'comments' => "$message", 'description' => 'Aspera API Creation Site', 'location'=>"$location", 'category' => "Support", 'assignment_group' => "$assid", 'caller_id' => "$callid");
+    //EDIT KA SCS Assignment Group, SCS Category and SCS Subcagetory
+    $params = array('sys_id' => "$sysid", 'comments' => "$message", 'description' => 'Aspera API Creation Site', 'location'=>"$location", 'category' => "Support", 'u_scs_category' => 'Data Transfer', 'u_scs_subcategory' => 'Run Service', 'assignment_group' => "$assid", 'caller_id' => "$callid");
     try {
         $result = $inc->update($params);
     } catch (Exception $e) {
