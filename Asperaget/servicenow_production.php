@@ -6,9 +6,17 @@
 * servicenow.php --update=INC##### --attach=/var/tmp/test.txt      // sends the test.txt file as attachement to the ServiceNow INC
 * servicenow.php --update=INC##### --message='some message'        // sends the message string to servicenow incident
 */
+
+// TEST MODE SET TO 0 FOR PRODUCTION!!
+$test = 1;
+
      
     use BITS\ServiceNow\Api;
-    include 'credentials.php';     
+    if($test){
+     include 'credentials-dev.php';
+    }else{
+     include 'credentials.php';     
+    }
     $cwd = dirname(__DIR__);
     set_include_path($cwd . PATH_SEPARATOR . get_include_path());
      
@@ -66,31 +74,30 @@ function getFile($filename = null) {
 *  Simple function to create incident and return the INC number on success
 */
 function newIncident($create) {
-//EDIT KA SCS assignment group, SCS Category and SCS Subcategory
+
         $snapi = new Api($GLOBALS['sn_user'], $GLOBALS['sn_pass'], $GLOBALS['sn_url']);
         $inc = $snapi->factory('ITIL\Incident');
-        $data = array('assignment_group' => 'SCS', 'description' => 'Aspera API Creation Site',
-            'short_description' => 'ASPGet request',
-            'caller_id' => "$create", 'category' => 'Support',
-            'location' => 'Remote',
-            'u_scs_category' => 'Data Transfer', 'u_scs_subcategory' => 'Run Service'
+    	$data = array('assignment_group' => 'Data Transfers', 'description' => 'Aspera API Creation Site',
+        	'short_description' => 'ASPGet request',
+        	'caller_id' => "$create", 'category' => 'Support',
+        	'location' => 'Remote'
         );
 
-        try {
-            $result = $inc->insert($data);
-        } catch (Exception $e) {
-            echo 'Exception: ' . $e->getMessage() . "\n";
-            exit(1);
-        }
+    	try {
+        	$result = $inc->insert($data);
+    	} catch (Exception $e) {
+        	echo 'Exception: ' . $e->getMessage() . "\n";
+        	exit(1);
+    	}
 
-        if (!$result) {
-            echo "Failed to create incident.";
-            exit(2);
-        }
+    	if (!$result) {
+        	echo "Failed to create incident.";
+        	exit(2);
+    	}
 
-        if (!isset($result->sys_id)) {
-            echo "Failed to create incident.";
-            exit(3);
+    	if (!isset($result->sys_id)) {
+        	echo "Failed to create incident.";
+        	exit(3);
     }
     $sys_id = $result->sys_id;
     $params = array('sys_id' => $sys_id);
