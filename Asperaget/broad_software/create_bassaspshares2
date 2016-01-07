@@ -1,0 +1,109 @@
+#!/bin/env perl
+
+BEGIN {$| = 1 }
+
+print "Content-Type: application/json\n\n";
+
+use JSON;
+use CGI;
+use MIME::Lite;
+use DBI;
+use POSIX;
+
+my $q = new CGI;
+$params = $q->Vars;
+my $email = $params->{'EMAIL'};
+my $filelist = $params->{'FILELIST'};
+my $name = $params->{'NAME'};
+my $ticket_number = $params->{'TICKET'};
+my $location = $params->{'LOCATION'};
+my $encrypt = $params->{'ENCRYPTED'};
+
+
+
+if(!$location){ $location = "GCS"; }
+if(!$encrypt){ $encrypt = "YES"; }
+chomp($APPPATH=`pwd`);
+
+## Restrict this list from manifest files ##
+@notallowed = ("/etc,/root");
+if(!$email && !$filelist && !$name && !$ticket_number){
+ print '{"HELP": "Acceptable GET Parameters","EMAIL":"VALID EMAIL ADDRESS","FILELIST":"Full Path of Manifest File | UPLOAD","NAME":"FULL NAME OF USER","TICKET":"SERVICE NOW TICKET NUMBER SNxxxxx","LOCATION":"PRESENTLY ONLY GCS", "ENCRYPTED" : "YES | NO"}';
+ exit;
+}
+if(!$email && !$filelist){ print '{"ERROR":"Your arguments are incorrect"}'; exit;}
+if(-d $filelist){print '{"ERROR":"Your File List appears to be a Directory it must be a file!"}'; exit;}
+if(!-e $filelist && $filelist != "UPLOAD"){print '{"ERROR":"Your File Does not exist. Check your path and file!"}'; exit;}
+if("$filelist" eq "UPLOAD" && "$location" ne "ECS" && "$location" ne "LOCAL"){print '{"ERROR":"UPLOAD sites currently restricted to ECS"}'; exit;}
+
+## Set $total_transfer to 1T by default until we calculate the needed space in mlaunch_crypt_sn script
+$total_transfer = 1;
+if($ticket_number !~ /\d+/ ){
+ chomp($ticket_number = `sudo -E -u root APPPATH=$APPPATH $APPPATH/servicenow.sh --create=$email`);
+ if($ticket_number !~ /\d+/){ &errormsg('{"ERROR":"Cannot Create A TICKET NUMBER"}'); exit;}
+} 
+
+$ticket_number =~ s/INC//g;
+$ticket_number =~ s/SN//g;
+
+&sendit($ticket_number,$filelist);
+
+
+### Generate the AspGet site ###
+#USAGE: create_aspget_account.pl <ServiceNow TICKET NUMBER> <EMAIL> <Project Manager> <quota for upload> <MANIFEST FULL PATH>
+my $return = `sudo -E -u root APPPATH=$APPPATH $APPPATH/create_aspget_account_sn.pl SN$ticket_number \"$email\" \"$name\" \"${total_transfer}T\" $filelist $location $encrypt`;
+if($return){
+print "$return";
+}else{
+print '{"ERROR":"An Error has occurred and it is unclear why"}';
+}
+
+#
+# Generate our Email message to be sent to ServiceNow
+#
+my $deserialized = decode_json("$return");
+
+
+if(!$deserialized->{'Error'}){
+
+   $emailstring =  "URL: ". $deserialized->{"URL"}."\n";
+   $emailstring .= "Username: ". $deserialized->{"USERNAME"}."\n";
+   $emailstring .= "Password: ". $deserialized->{"PASSWD"}."\n";
+   $emailstring .= "File Password URL: ". $deserialized->{"FILE PASSWD URL"}."\n";
+
+}else{
+
+ $emailstring = "Error: ". $deserialized->{"Error"}."\n";
+
+}
+
+
+&sendit($ticket_number,0,1,$emailstring);
+
+
+
+sub sendit {
+
+my( $ticket,$filename,$comment,$emailstring) = @_;
+
+$ticket = "INC$ticket";
+
+if($comment){
+
+chomp($sendcomment = `sudo -E -u root APPPATH=$APPPATH $APPPATH/servicenow.sh --update=$ticket --message=\"\'$emailstring\'\"`);
+
+
+}
+
+if($filename){
+chomp($attachit = `sudo -E -u root APPPATH=$APPPATH $APPPATH/servicenow.sh --update=$ticket --attach=\'$filename\'`);
+}
+
+}
+
+sub errormsg {
+ my $msg = shift;
+ print $q->header(-type => 'application/json',-charset =>  'utf-8', -status => 400 ),$msg;
+
+}
+

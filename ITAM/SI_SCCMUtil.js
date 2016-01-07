@@ -1,6 +1,6 @@
 //SI SCCMUtil
 //Transform map script
-//scoure script target cmdb_ci
+//scoure script target cmdb_ci answer = SCCMUtil.findComputer(source.u_resourceid);
 var SCCMUtil = Class.create();
 
 SCCMUtil.findComputer = function(id) {

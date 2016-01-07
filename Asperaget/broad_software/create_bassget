@@ -1,0 +1,126 @@
+#!/bin/env perl
+
+#BEGIN {$| = 1 }
+#print "Content-Type: application/json\n\n";
+
+
+use JSON;
+use CGI;
+use MIME::Lite;
+use DBI;
+use CGI; 
+use MIME::Base64;
+
+
+my $q = new CGI;
+my $email = $q->param('EMAIL');
+my $filelist = $q->param('FILELIST');
+#print $q->header();
+if(!$email && !$filelist){ &errormsg('{"ERROR":"Your arguments are incorrect"}'); exit;}
+if(-d $filelist){ &errormsg('{"ERROR":"Your File List appears to be a Directory it must be a file!"}'); exit;}
+if(!-e $filelist){ &errormsg('{"ERROR":"Your File Does not exist. Check your path and file!"}'); exit;}
+
+
+###
+### Check filelist for Directories and get total size
+###
+open(F,"$filelist");
+my @files = <F>;
+close F;
+
+foreach my $f (@files){
+       $size_in_gb = "";
+       ($fpath) = split(" ",$f);
+       ### no directories allowed ##
+       if(-d $fpath){ &errormsg('{"ERROR":"Your Filelist cannot contain directories!"}'); exit;}
+
+}
+       
+chomp($sha1 = `sha1sum $filelist | awk '{print \$1}'`);
+
+chomp($ticket_number = `sudo -u root /broad/software/scripts/aspget/bassaspget/servicenow.sh --create=$email`);
+if($ticket_number !~ /\d{7,}/){ &errormsg('{"ERROR":"Cannot Create A TICKET NUMBER"}'); exit;}
+#remove the prefix from ticket
+$ticket_number =~ s/INC//g;
+
+&sendit($ticket_number,$filelist,0,0);
+
+### Generate the Get site and reload apache ###
+if($ticket_number){
+  $return = `sudo -u apsg /broad/srv/get/scripts/bassget/mkshare_bass.rb SN$ticket_number "$filelist"`;
+  $logit = `sudo -u apsg /sbin/service httpd reload 2>&1`;
+#  $resolve = `sudo -u root /broad/software/scripts/aspget/bassaspget/rtapi.pl --resolve $ticket_number`;
+
+}else{
+  &errormsg('{"ERROR":"Error generating ticket number"}');
+  exit;
+}
+
+if($return){
+if("$return" =~ "ERROR"){ 
+ &errormsg($return);
+}else{
+ &okmsg($return);
+}
+}else{
+ &errormsg('{"ERROR":"An Error has occurred and it is unclear why"}');
+}
+
+#open(LOG,">>/sysman/scratch/rpete/bassget/bassget.log");
+#print LOG "$logit\n";
+#print LOG "$return\n";
+#close LOG;
+
+#
+# Generate our Email message to be sent to RT
+#
+my $deserialized = decode_json("$return");
+
+
+if(!$deserialized->{'ERROR'}){
+
+   $emailstring =  "URL: ". $deserialized->{"URL"}."\n";
+   $emailstring .= "Username: ". $deserialized->{"Username"}."\n";
+   $emailstring .= "Password: ". $deserialized->{"Password"}."\n";
+   $emailstring .= "Example: ". $deserialized->{"Example"}."\n";
+
+}else{
+
+ $emailstring = "ERROR: ". $deserialized->{"ERROR"}."\n";
+
+}
+
+&sendit($ticket_number,0,1,$emailstring);
+
+sub errormsg {
+ my $msg = shift;
+ print $q->header(-type => 'application/json',-charset =>  'utf-8', -status => 400 ),$msg;
+
+}
+
+sub okmsg {
+ my $msg = shift;
+ print $q->header(-type => 'application/json',-charset =>  'utf-8', -status => 200),$msg; 
+}
+
+sub sendit {
+
+my( $ticket,$filename,$comment,$emailstring) = @_;
+
+$ticket = "INC$ticket";
+if($comment){
+
+
+$sendcommand = "sudo -u root /broad/software/scripts/aspget/bassaspget/servicenow.sh --update=$ticket --message=\'$emailstring\'";
+system("$sendcommand");
+#`echo "COMMENT=$sendcomment" >> /tmp/output`;
+
+}
+
+if($filename){
+chomp($attachit = `sudo -u root /broad/software/scripts/aspget/bassaspget/servicenow.sh --update=$ticket --attach=\'$filename\'`);
+`echo "ATTACH=$attachit" >>/tmp/output`;
+}
+
+}
+
