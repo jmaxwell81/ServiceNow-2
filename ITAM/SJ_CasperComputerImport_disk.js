@@ -1,5 +1,5 @@
 //Send REST API message to Casper Computer resource URL get serial numbers
-try { 
+/*try { 
     var rc = new sn_ws.RESTMessageV2('Casper_Computer', 'get');
     var res = rc.execute();
     var resBody = res.getBody();
@@ -10,7 +10,7 @@ try {
 }
 catch(ex) {
     var message = ex.getMessage();
-}
+}  
 
 //Parse JSON object
 for (i = 0; i < parsd.computers.length; i++){
@@ -26,7 +26,7 @@ try {
     r.setStringParameter("serialnumber", serial_number);
     var response = r.execute();
     var responseBody = response.getBody();
-    var httpStatussn = response.getStatusCode();
+    var httpStatus = response.getStatusCode();
     var parser = new JSONParser();  
     var parsed = parser.parse(responseBody);
 //  gs.log("Casper serial number responseBody: " + resBody);
@@ -50,9 +50,6 @@ catch(ex) {
     var processor_type = parsed.computer.hardware.processor_type;
     var processor_speed = parsed.computer.hardware.processor_speed;
     var processor_count = parsed.computer.hardware.number_processors;
-    var disk_model = parsed.computer.storage.device.model;
-    var disk_serial_number = parsed.computer.storage.device.serial_number;
-    var disk_size = parsed.computer.storage.device.size;
     gs.log("Casper Serialnumber Import: " + "Serialnumber: " + serial_number + "Mac address " + mac_address + "Alt mac : " + alt_mac_address);
     
    var cspcmp = new GlideRecord('u_imp_casper_computer');  
@@ -80,12 +77,59 @@ catch(ex) {
      cspnet.u_mac_address = mac_address;
      cspnet.u_ip_address = ip_address;
      cspnet.insert();
-    
-   var cspdisk = new GlideRecord('u_imp_casper_disk');  
-     cspdisk.initialize(); 
-     cspdisk.u_casper_id = casper_id;
-     cspdisk.u_disk_model = disk_model;
-     cspdisk.u_disk_serial_number = disk_serial_number;
-     cspdisk.u_disk_size = disk_size;
-     cspdisk.insert();
 }
+
+for (i = 0; i < parsed.computer.storage.length; i++){
+    var disk_model = parsed.computer.storage[i].device.model;
+    var disk_serial_number = parsed.computer.storage[i].device.serial_number;
+    var disk_size = parsed.computer.storage[i].device.size; 
+    var cspdisk = new GlideRecord('u_imp_casper_disk');  
+    cspdisk.initialize(); 
+    cspdisk.u_casper_id = casper_id;
+    cspdisk.u_disk_model = disk_model;
+    cspdisk.u_disk_serial_number = disk_serial_number;
+    cspdisk.u_disk_size = disk_size;
+    cspdisk.insert();       
+    }
+    */
+
+
+try {
+    var r = new sn_ws.RESTMessageV2('Casper_Serialnumber', 'get');
+    r.setStringParameter("serialnumber", 'D25P40SVFY14');
+    var response = r.execute();
+    var responseBody = response.getBody();
+    var httpStatus = response.getStatusCode();
+    var parser = new JSONParser();  
+    var parsed = parser.parse(responseBody);
+    gs.log("Casper serial number responseBody: " + responseBody);
+}
+catch(ex) {
+    var message = ex.getMessage();
+}
+for (i = 0; i < parsed.computer.hardware.storage.length; i++){
+    var disk_model = parsed.computer.hardware.storage[i].model;
+    var disk_serial_number = parsed.computer.hardware.storage[i].serial_number;
+    var disk_size = parsed.computer.hardware.storage[i].size;
+    var disk_percentage_full = parsed.computer.hardware.storage[i].partition.percentage_full;
+    gs.log("Casper Import Disk: " + disk_model + "Disk Serialnumber: " + disk_serial_number + "Disk size: " + disk_size + "Percent full: " + disk_percentage_full);
+}
+/*if (!Array.isArray) {
+  Array.isArray = function(arg) {
+    return Object.prototype.toString.call(arg) === '[object Array]';
+  };
+}*/
+
+// works    
+//var storage = parsed.computer.hardware.storage[0].model;
+    //var storage = parsed.computer.hardware.storage.length;
+//  gs.log("Casper Import Disk: " + storage);
+
+/*  var cspdisk = new GlideRecord('u_imp_casper_disk');  
+    cspdisk.initialize(); 
+    cspdisk.u_casper_id = casper_id;
+    cspdisk.u_disk_model = disk_model;
+    cspdisk.u_disk_serial_number = disk_serial_number;
+    cspdisk.u_disk_size = disk_size;
+    cspdisk.insert();   */
+//  }
