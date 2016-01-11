@@ -1,0 +1,1 @@
+com.glide.db.impex.transformer.TransformCoercionException: Unable to format 2014-02-10 using format string yyyy-MM-dd hh:mm:ss for field warranty_expiration
